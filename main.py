@@ -78,6 +78,66 @@ def result():
 
     return render_template("result.html", message=message)
 
+@app.route("/profile", methods=["GET"])
+def profile():
+    session_token = request.cookies.get("session_token")
+
+    # get user from the database based on her/his email address
+    user = User.fetch_one(query=["session_token", "==", session_token])
+
+    if user:
+        return render_template("profile.html", user=user)
+    else:
+        return redirect(url_for("index"))
+
+@app.route("/profile/edit", methods=["GET", "POST"])
+def profile_edit():
+    session_token = request.cookies.get("session_token")
+
+    # get user from the database based on her/his email address
+    user = User.fetch_one(query=["session_token", "==", session_token])
+
+    if request.method == "GET":
+        if user:  # if user is found
+            return render_template("profile_edit.html", user=user)
+        else:
+            return redirect(url_for("index"))
+    elif request.method == "POST":
+        name = request.form.get("profile-name")
+        email = request.form.get("profile-email")
+
+        User.edit(obj_id=user.id, name=name, email=email)
+
+        return redirect(url_for("profile"))
+
+@app.route("/profile/delete", methods=["GET", "POST"])
+def profile_delete():
+    session_token = request.cookies.get("session_token")
+
+    # get user from the database based on her/his email address
+    user = User.fetch_one(query=["session_token", "==", session_token])
+
+    if request.method == "GET":
+        if user:  # if user is found
+            return render_template("profile_delete.html", user=user)
+        else:
+            return redirect(url_for("index"))
+    elif request.method == "POST":
+        User.delete(obj_id=user.id)
+
+        return redirect(url_for("index"))
+
+@app.route("/users", methods=["GET"])
+def all_users():
+    users = User.fetch()
+
+    return render_template("users.html", users=users)
+
+@app.route("/user/<user_id>", methods=["GET"])
+def user_details(user_id):
+    user = User.get(obj_id=user_id)
+
+    return render_template("user_details.html", user=user)
 
 if __name__ == '__main__':
     app.run(debug=True)
